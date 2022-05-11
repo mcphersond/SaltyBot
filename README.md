@@ -1,0 +1,3 @@
+# SaltyBot
+
+Gambling bot
