@@ -1,5 +1,5 @@
 
-const { dbUser, dbPass, token, ownerId, prefix} = require("./config.json")
+const { dbUser, dbPass, token, ownerId} = require("./config.json")
 const { Client, Intents } = require("discord.js");
 const { InteractionResponseType } = require("discord-api-types/v10");
 const Sequelize = require('sequelize');
@@ -48,8 +48,12 @@ const Active_bets = db.define('Active_bets', {
     },
     odds: {
 		type: Sequelize.NUMBER,
-		allowNull: false,
-	}
+		allowNull: false
+	},
+    bets_open: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false
+    }
 });
 
 const Bets = db.define('Bets', {
