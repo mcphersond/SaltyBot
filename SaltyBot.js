@@ -14,7 +14,7 @@ for (const file of commandFiles) {
 }
 
 client.once('ready', () => {
-	console.log('I am ready!');
+	console.log('SaltyBot v1.0 is operational and ready to gamble.');
 });
 
 client.on('interactionCreate', async interaction => {

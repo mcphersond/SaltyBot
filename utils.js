@@ -67,7 +67,7 @@ module.exports = {
 		for (let i = 0; i < choices.length; i++) {
 			count = 0;
 			search = choices[i].name;
-			for (let k = 0; k < choices.length; i++) {
+			for (let k = 0; k < choices.length; k++) {
 				if (choices[k].name == search) {
 					count++;
 					if (count > 1) {

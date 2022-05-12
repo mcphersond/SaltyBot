@@ -31,6 +31,6 @@ module.exports = {
 		// .setDescription('```TODO winrates, joindates```')
 			.setTimestamp()
 			.setFooter({ text: footer, iconURL: icon });
-		await interaction.reply({ content: { embeds: [embed] }, ephemeral: true });
+		await interaction.reply({ embeds: [embed] });
 	},
 };
