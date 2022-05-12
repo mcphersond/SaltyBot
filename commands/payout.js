@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Choices, Wagers } = require('../db_objects.js');
 const utils = require('../utils.js');
+const { Op } = require('sequelize');
 
 
 module.exports = {
@@ -31,6 +32,29 @@ module.exports = {
 			await interaction.reply({ content:'The choice name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
 		}
+				
+		// Assign a loss to each loser.
+		const losers = await Wagers.findAll({ where: { choice_id: {[Op.ne]: choice.choice_id}, bet_id: bet.bet_id } });
+		for (let i = 0; i < losers.length; i++) {
+			user = await Users.findOne({ where: { user_id: losers[i].user_id } });
+			user.losses = user.losses + 1;
+			try {
+				await Users.update(
+					{
+						stash: user.stash,
+						wins: user.wins,
+					},
+					{
+						where: { user_id: user.user_id },
+					},
+				);
+			}
+			catch (err) {
+				console.log(`Failed to update losses for ${user.username} : ${err}`);
+			}
+		}
+
+		// Calculate odds to determine winnings, and grant the calculated amount to winners.
 		const wagers = await Wagers.findAll({ where: { choice_id: choice.choice_id, bet_id: bet.bet_id } });
 		const detailedChoices = await utils.buildDetailedChoices(bet.bet_id);
 		const odds = detailedChoices.find((c) => {
@@ -42,10 +66,12 @@ module.exports = {
 			const payout = wagers[i].amount + profit;
 			user = await Users.findOne({ where: { user_id: wagers[i].user_id } });
 			user.stash = payout + user.stash;
+			user.wins = user.wins + 1;
 			try {
 				await Users.update(
 					{
 						stash: user.stash,
+						wins: user.wins,
 					},
 					{
 						where: { user_id: user.user_id },
