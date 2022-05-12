@@ -24,7 +24,7 @@ module.exports = {
 				await interaction.reply({ content: 'Something went wrong.', ephemeral: true });
 			}
 		}
-		let winrate = 0;
+		let winrate = results.wins;
 		if (results.losses > 0) winrate = results.wins / results.losses;
 		const embed = new MessageEmbed()
 			.setColor('#10b981')
