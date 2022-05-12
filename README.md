@@ -5,7 +5,7 @@ Gambling bot
 ## First Time Setup on a local machine or server
 1. Clone this repository
     `git clone https://github.com/mcphersond/SaltyBot.git`
-  
+1. Use node v16.13.2+ (`nvm install v16.13.2 && nvm use v16.13.2`)
 1. Create a file named `config.json` in the root of this project and fill in the following values:
     ```
     {
