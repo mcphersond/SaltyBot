@@ -10,14 +10,14 @@ module.exports = {
     async execute(interaction) {
         let user = interaction.user;
         let results = await Users.findOne({ where: { username: user.tag }});
-
+        console.log(results);
         const embed = new MessageEmbed()
             .setColor('#10b981')
-            .setTitle(`$${user.stash}`)
+            .setTitle(`$${results.stash}`)
             .setAuthor({ name: user.tag, iconURL: icon })
-            .setDescription('```TODO winrates, joindates```')
+            //.setDescription('```TODO winrates, joindates```')
             .setTimestamp()
             .setFooter({ text: footer, iconURL: icon });
-        await interaction.reply({ embeds: [exampleEmbed] });
+        await interaction.reply({ embeds: [embed] });
     },
 };

@@ -1,4 +1,4 @@
-const { Choices, Wagers } = require('../db_objects.js');
+const { Choices, Wagers } = require('./db_objects.js');
 
 module.exports = {
   numberIcons: ['0️', '1️', '2️', '3️', '4️', '5️', '6️', '7️', '8️', '9️'],
@@ -43,23 +43,29 @@ module.exports = {
   },
 
 
-  buildDetailedChoices(bet_id) {
+  async buildDetailedChoices(bet_id) {
     // Get a list of choices and determine the total amount wagered on each choice.
-    let choices = await Choices.find({ where: { bet_id: bet_id }});
-    let wagers = await Wagers.find({ where: { bet_id: bet_id }});
+    let choices = await Choices.findAll({ where: { bet_id: bet_id }});
+    let wagers = await Wagers.findAll({ where: { bet_id: bet_id }});
+
+    let detailedChoices = [];
 
     // Go through and add the total attribute to each choice.
     for (let i = 0; i < choices.length; i++) {
+      detailedChoices[i] = { 
+        num: choices[i].num,
+        name: choices[i].name
+      };
       let total = 0;
       for (let j = 0; j < wagers.length; j++) {
-        if (wagers[j].choice_id) total += wagers[j].amount;
+        if (wagers[j].choice_id == choices[i].choice_id) total += wagers[j].amount;
       }
-      choices[i].total = total;
+      detailedChoices[i].total = total;
     }
 
     // Calculate odds now that we have totals to work with.
-    choices = determineOdds(choices);
+    detailedChoices = this.determineOdds(detailedChoices);
 
-    return choices;
+    return detailedChoices;
   }
 };
