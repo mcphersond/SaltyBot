@@ -3,6 +3,7 @@ const { MessageEmbed } = require('discord.js');
 const { Users, Choices, Bets, Wagers } = require('../db_objects.js');
 const { icon, footer } = require('../config.json');
 const utils = require('../utils.js');
+const { containsDuplicates } = require('../utils.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -23,7 +24,7 @@ module.exports = {
 		.addStringOption(option =>
 			option.setName('option3')
 				.setDescription('Enter name of wager')
-				.setRequired(true))
+				.setRequired(false))
 		.addStringOption(option =>
 			option.setName('option4')
 				.setDescription('Enter option name')
@@ -59,9 +60,13 @@ module.exports = {
 			return opt.name != null;
 		});
 
+		if (containsDuplicates(choices)) {
+			await interaction.reply({ content: 'There are duplicate choice names, please try again.', ephemeral: true });
+			return;
+		}
 
 		if (await Bets.findOne({ where: { name: name } })) {
-			await interaction.reply('That bet name already exists, please try again.');
+			await interaction.reply({ content: 'That bet name already exists, please try again.', ephemeral: true });
 		}
 		else {
 			try {
@@ -73,7 +78,7 @@ module.exports = {
 				for (let i = 0; i < choices.length; i++) {
 					const newChoice = await Choices.create({
 						bet_id: newBet.bet_id,
-						name: choices[i].name,
+						name: choices[i].name.toLowerCase(),
 						num: (i + 1),
 					});
 					console.log(`Adding new choice to database: \n${JSON.stringify(newChoice)}`);
@@ -83,7 +88,7 @@ module.exports = {
 				const embed = new MessageEmbed()
 					.setColor('#10b981')
 					.setTitle(newBet.name)
-					.setDescription('Reactions are only for the bookee.')
+					.setDescription(`Place your bets by typing /bet ${newBet.name} $choice $amount. Reactions are only for the bookee.`)
 					.addFields(
 						{ name: 'Choices', value: table },
 					)
@@ -153,7 +158,7 @@ module.exports = {
 									);
 									console.log(`Returned Bet: \n${JSON.stringify(user)}`);
 								}
-								console.log('Bet destroyed, any wagers made have been refunded.');
+								console.log({ content: 'Bet destroyed! Any wagers made have been refunded.', ephemeral: true });
 							}
 							catch (err) {
 								console.log(err);

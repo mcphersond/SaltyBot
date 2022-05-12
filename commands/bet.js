@@ -37,75 +37,92 @@ module.exports = {
 			return;
 		}
 		const bet = await Bets.findOne({ where: { name: name } });
-		const account = await Users.findOne({ where: { username: user.tag } });
+		let account = await Users.findOne({ where: { username: user.tag } });
+		if (!account) {
+			try {
+				account = await Users.create({
+					user_id: user.id,
+					username: user.tag,
+					stash: 2000,
+				});
+				console.log(`Adding new user to database: \n${JSON.stringify(account)}`);
+			}
+			catch (err) {
+				console.log(err);
+				await interaction.reply('Something went wrong.');
+			}
+		}
 		if (!bet?.bet_id) {
 			await interaction.reply({ content:'The bet name you have entered does not exist. Please try again.', ephemeral: true });
+			return;
 		}
-		else {
-			const choice = await Choices.findOne({ where: { name: selection, bet_id: bet.bet_id } });
-			if (amount > account.stash) {
-				await interaction.reply({ content:`You only have ${account.stash} in your stash. Please obtain more salt.`, ephemeral: true });
-			}
-			else if (!choice?.choice_id) {
-				await interaction.reply({ content:'The choice name you have entered does not exist. Please try again.', ephemeral: true });
+		if (!bet.is_open) {
+			await interaction.reply({ content:'The betting window has already closed. Sorry!', ephemeral: true });
+			return;
+		}
+		const choice = await Choices.findOne({ where: { name: selection.toLowerCase(), bet_id: bet.bet_id } });
+		if (amount > account.stash) {
+			await interaction.reply({ content:`You only have ${account.stash} in your stash. Please obtain more salt.`, ephemeral: true });
+			return;
+		}
+		else if (!choice?.choice_id) {
+			await interaction.reply({ content:'The choice name you have entered does not exist. Please try again.', ephemeral: true });
+			return;
+		}
+		try {
+			const [wager, created] = await Wagers.upsert(
+				{
+					user_id: account.user_id,
+					bet_id: bet.bet_id,
+					choice_id: choice.choice_id,
+					amount: amount,
+				},
+			);
+			if (created) {
+				state = 'created';
+				console.log(`Created wager: \n${JSON.stringify(wager)}`);
 			}
 			else {
-				try {
-					const [wager, created] = await Wagers.upsert(
-						{
-							user_id: account.user_id,
-							bet_id: bet.bet_id,
-							choice_id: choice.choice_id,
-							amount: amount,
-						},
-					);
-					if (created) {
-						state = 'created';
-						console.log(`Created wager: \n${JSON.stringify(wager)}`);
-					}
-					else {
-						state = 'updated';
-						console.log(`Updated wager: \n${JSON.stringify(wager)}`);
-					}
-					account.stash = (account.stash - amount);
-					if (account.stash == 0) { account.stash = 200; }
-					await Users.update(
-						{
-							stash: account.stash,
-						},
-						{
-							where: { username: user.tag },
-						},
-					);
-					console.log(`Updated User: \n${JSON.stringify(account)}`);
-					const content = await utils.buildDetailedChoices(bet.bet_id);
-					const table = '```' + utils.formatTable(content) + '```';
-
-					const embed = new MessageEmbed()
-						.setColor('#10b981')
-						.setTitle(bet.name)
-						.setDescription('Reactions are only for the bookee.')
-						.addFields(
-							{ name: 'Choices', value: table },
-						)
-						.setTimestamp()
-						.setFooter({ text: footer, iconURL: icon });
-
-
-					interaction.channel.messages.fetch({ around: bet.message_id, limit: 1 })
-						.then(msg => {
-							const fetchedMsg = msg.first();
-							fetchedMsg.edit({ embeds: [embed] });
-						});
-
-					await interaction.reply({ content: `Your bet for ${amount} on ${selection} is in. Your remaining balance is ${account.stash}`, ephemeral: true });
-				}
-				catch (err) {
-					await interaction.reply('Something went fucky wucky. Check logs');
-					console.log(err);
-				}
+				state = 'updated';
+				console.log(`Updated wager: \n${JSON.stringify(wager)}`);
 			}
+			// Sets default stash value.
+			account.stash = (account.stash - amount);
+			if (account.stash < 200) { account.stash = 200; }
+			await Users.update(
+				{
+					stash: account.stash,
+				},
+				{
+					where: { username: user.tag },
+				},
+			);
+			console.log(`Updated User: \n${JSON.stringify(account)}`);
+			const content = await utils.buildDetailedChoices(bet.bet_id);
+			const table = '```' + utils.formatTable(content) + '```';
 
+			const embed = new MessageEmbed()
+				.setColor('#10b981')
+				.setTitle(bet.name)
+				.setDescription('Reactions are only for the bookee.')
+				.addFields(
+					{ name: 'Choices', value: table },
+				)
+				.setTimestamp()
+				.setFooter({ text: footer, iconURL: icon });
+
+
+			interaction.channel.messages.fetch({ around: bet.message_id, limit: 1 })
+				.then(msg => {
+					const fetchedMsg = msg.first();
+					fetchedMsg.edit({ embeds: [embed] });
+				});
+
+			await interaction.reply({ content: `Your bet for ${amount} on ${selection} is in. Your remaining balance is ${account.stash}`, ephemeral: true });
+		}
+		catch (err) {
+			await interaction.reply('Something went fucky wucky. Check logs');
+			console.log(err);
 		}
 	},
 };

@@ -17,9 +17,16 @@ module.exports = {
 
 		for (let i = 0; i < choices.length; i++) {
 			const paddedOpt = choices[i].name.padEnd(optionLength);
+			if (choices[i].total == 0) {
+				choices[i].total = 100;
+				choices[i].odds = 1;
+			}
 			const paddedTotal = choices[i].total.toString().padEnd(totalLength);
-			const odds = choices[i].odds ? (choices[i].odds * 100).toFixed(2) : '0.00';
-			let line = `${this.numberIcons[i + 1]} ${paddedOpt}         ${paddedTotal}         ${odds}%`;
+			const odds = choices[i].odds;
+			if (i == 0) {
+				output += '# Bet           Pool       Odds\n';
+			}
+			let line = `${this.numberIcons[i + 1]} ${paddedOpt}         ${paddedTotal}         ${odds}`;
 			if (i < choices.length - 1) line += '\n';
 			output += line;
 		}
@@ -28,18 +35,48 @@ module.exports = {
 	},
 
 	determineOdds(choices) {
-		let bigTotal = 0;
+		let excludedPool = 0;
+		let num = 1;
+		console.log('Odds determining', JSON.stringify(choices));
 		for (let i = 0; i < choices.length; i++) {
-			bigTotal += choices[i].total;
-		}
-		for (let i = 0; i < choices.length; i++) {
-			if (choices[i].total == 0) {
-				choices[i].odds = 0;
-				continue;
+			excludedPool = 0;
+			console.log('i', i);
+			num = choices[i].num;
+			console.log('num', num);
+			for (let k = 0; k < choices.length; k++) {
+				console.log('k', k);
+				console.log('k total', choices[k].total);
+				console.log('k num', choices[k].num);
+				if (choices[k].num != num) {
+					console.log('Entering excluded');
+					excludedPool += choices[k].total;
+				}
 			}
-			choices[i].odds = choices[i].total / bigTotal;
+			console.log('Excluded', excludedPool);
+			console.log('total', choices[i].total);
+			console.log((excludedPool / choices[i].total));
+			choices[i].odds = excludedPool / choices[i].total;
 		}
+		console.log(JSON.stringify(choices));
 		return choices;
+	},
+
+	containsDuplicates(choices) {
+		let count = 0;
+		let search = '';
+		for (let i = 0; i < choices.length; i++) {
+			count = 0;
+			search = choices[i].name;
+			for (let k = 0; k < choices.length; i++) {
+				if (choices[k].name == search) {
+					count++;
+					if (count > 1) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	},
 
 
@@ -59,9 +96,12 @@ module.exports = {
 			};
 			let total = 0;
 			for (let j = 0; j < wagers.length; j++) {
-				if (wagers[j].choice_id == choices[i].choice_id) total += wagers[j].amount;
+				if (wagers[j].choice_id == choices[i].choice_id) {
+					total += wagers[j].amount;
+				}
 			}
-			detailedChoices[i].total = total;
+			// Bot will make a $100 pity bet on all choices to ensure there is some sort of a pot.
+			detailedChoices[i].total = total + 100;
 		}
 
 		// Calculate odds now that we have totals to work with.
