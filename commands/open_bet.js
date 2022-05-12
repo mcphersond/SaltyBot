@@ -88,12 +88,10 @@ module.exports = {
 				const embed = new MessageEmbed()
 					.setColor('#10b981')
 					.setTitle(newBet.name)
-					.setDescription(`Place your bets by typing /bet ${newBet.name} $choice $amount. Reactions are only for the bookee.`)
+					.setDescription('Place a bet by typing `/bet '+ newBet.name + ' $choice $amount`')
 					.addFields(
 						{ name: 'Choices', value: table },
-					)
-					.setTimestamp()
-					.setFooter({ text: footer, iconURL: icon });
+					);
 				await interaction.reply({ embeds: [embed] });
 				const message = await interaction.fetchReply();
 				let updatedBet = await Bets.update(

@@ -103,14 +103,11 @@ module.exports = {
 
 			const embed = new MessageEmbed()
 				.setColor('#10b981')
-				.setTitle(bet.name)
-				.setDescription('Reactions are only for the bookee.')
+				.setTitle(name)
+				.setDescription('Place a bet by typing `/bet '+ name + ' $choice $amount`')
 				.addFields(
 					{ name: 'Choices', value: table },
-				)
-				.setTimestamp()
-				.setFooter({ text: footer, iconURL: icon });
-
+				);
 
 			interaction.channel.messages.fetch({ around: bet.message_id, limit: 1 })
 				.then(msg => {

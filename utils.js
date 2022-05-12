@@ -10,10 +10,10 @@ module.exports = {
 	],
 
 	formatTable(choices) {
-		const optionLength = Math.max(...(choices.map(opt => opt.name.length)));
-		const totalLength = Math.max(...(choices.map(opt => opt.total.toString().length)));
-
-		let output = '';
+		const optionLength = Math.max('Choice'.length, ...(choices.map(opt => opt.name.length)));
+		const totalLength = Math.max('Odds'.length, ...(choices.map(opt => opt.total.toString().length)));
+		console.log(optionLength)
+		let output = '# '  + 'Choice'.padEnd(optionLength) + '      ' + 'Pool'.padEnd(totalLength) + '      Odds\n';
 
 		for (let i = 0; i < choices.length; i++) {
 			const paddedOpt = choices[i].name.padEnd(optionLength);
@@ -22,11 +22,8 @@ module.exports = {
 				choices[i].odds = 1;
 			}
 			const paddedTotal = choices[i].total.toString().padEnd(totalLength);
-			const odds = choices[i].odds;
-			if (i == 0) {
-				output += '# Bet           Pool       Odds\n';
-			}
-			let line = `${this.numberIcons[i + 1]} ${paddedOpt}         ${paddedTotal}         ${odds}`;
+			const odds = choices[i].odds.toFixed(2);
+			let line = `${this.numberIcons[i + 1]} ${paddedOpt}      ${paddedTotal}      ${odds}`;
 			if (i < choices.length - 1) line += '\n';
 			output += line;
 		}
