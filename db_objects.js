@@ -21,4 +21,3 @@ Wagers.belongsTo(Choices, {foreignKey: 'choice_id', as: 'choice'})
 Wagers.belongsTo(Bets, {foreignKey: 'bet_id', as: 'bet'})
 
 module.exports = { Users, Wagers, Choices, Bets };
-

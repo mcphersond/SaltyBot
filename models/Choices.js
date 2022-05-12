@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         bet_id: DataTypes.INTEGER,
+        num: DataTypes.INTEGER,
         name: {
             type: DataTypes.STRING,
             allowNull: false
