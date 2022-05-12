@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Choices, Wagers } = require('../db_objects.js');
 const utils = require('../utils.js');
 
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('payout')
@@ -30,7 +31,7 @@ module.exports = {
 			await interaction.reply({ content:'The choice name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
 		}
-		const wagers = Wagers.findAll({ where: { choice_id: choice.choice_id, bet_id: bet.bet_id } });
+		const wagers = await Wagers.findAll({ where: { choice_id: choice.choice_id, bet_id: bet.bet_id } });
 		const detailedChoices = await utils.buildDetailedChoices(bet.bet_id);
 		const odds = detailedChoices.find((c) => {
 			return c.choice_id == choice.choice_id;

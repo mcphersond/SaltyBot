@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Wagers, Choices } = require('../db_objects.js');
 const { icon, footer } = require('../config.json');
-const { MessageEmbed, MessageManager } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const utils = require('../utils.js');
 /*  TODO: Fix upsert, not gonna work
     TODO: Add support for choice numbers
@@ -68,6 +68,7 @@ module.exports = {
 						console.log(`Updated wager: \n${JSON.stringify(wager)}`);
 					}
 					account.stash = (account.stash - amount);
+					if (account.stash == 0) { account.stash = 200; }
 					await Users.update(
 						{
 							stash: account.stash,
