@@ -8,7 +8,8 @@ module.exports = (sequelize, DataTypes) => {
         },
         name: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: false,
+            unique: true
         }, 
         is_open: {
             type: DataTypes.BOOLEAN,
@@ -16,10 +17,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
         message_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true
+            type: DataTypes.STRING,
+            allowNull: true,
+            unique: true
         },
-        user_id: DataTypes.INTEGER,
+        user_id: DataTypes.STRING,
     }, {
 		timestamps: false,
 	});
