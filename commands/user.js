@@ -1,12 +1,23 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { MessageEmbed } = require('discord.js');
 const { Users } = require('../db_objects.js');
+const { icon, footer } = require('../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('user')
-        .setDescription('Debug to view your user entry'),
+        .setName('stash')
+        .setDescription('View your current salt stash'),
     async execute(interaction) {
+        let user = interaction.user;
         let results = await Users.findOne({ where: { username: user.tag }});
-        await interaction.reply(`Your tag is ${results.username}, your id is ${results.user_id}, your current stash is at $ ${results.stash}`);
+
+        const embed = new MessageEmbed()
+            .setColor('#10b981')
+            .setTitle(`$${user.stash}`)
+            .setAuthor({ name: user.tag, iconURL: icon })
+            .setDescription('```TODO winrates, joindates```')
+            .setTimestamp()
+            .setFooter({ text: footer, iconURL: icon });
+        await interaction.reply({ embeds: [exampleEmbed] });
     },
 };
