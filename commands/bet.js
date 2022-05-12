@@ -1,10 +1,15 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { Users } = require('../db_objects.js');
-
+const { Users, Bets, Wagers, Choices} = require('../db_objects.js');
+// TODO: Fix upsert, not gonna work
+// Fix the undefined stash error
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('bet')
         .setDescription('Bet on an active gamble!')
+        .addStringOption(option =>
+            option.setName('betname')
+            .setDescription('Please enter the name of the bet you are wagering on.')
+            .setRequired(true))
         .addStringOption(option =>
             option.setName('choice')
             .setDescription('Please enter which option you are betting on.')
@@ -15,31 +20,59 @@ module.exports = {
             .setRequired(true)),
     async execute(interaction) {
         const { user } = interaction;
+        let state = "created"
+        let name = interaction.options.getString('betname');
         let account = await Users.findOne({ where: { username: user.tag }});
-        let choice = interaction.options.getString('choice');
-        let bet = interaction.options.getInteger('amount');
-        if (bet > stash) {
-            await interaction.reply(`You only have ${account.stash} in your stash. Please obtain more salt.`);
+        console.log(JSON.stringify(account));
+        let selection = interaction.options.getString('choice');
+        let amount = interaction.options.getInteger('amount');
+        let bet = await Bets.findOne({ where: { name: name}})
+        if(!bet?.bet_id){
+            await interaction.reply({ content:'The bet name you have entered does not exist. Please try again.', ephemeral: true});
         }
-        else {
-            account.stash = account.stash - bet;
-            try{
-                let updatedAccount = await Users.update(
-                    {
-                        stash: account.stash,
-                    },
-                    {
-                        where: {user_id: account.id},
+        else{
+            console.log(JSON.stringify(bet));
+            let choice = await Choices.findOne({ where: { name: selection, bet_id: bet.bet_id }});
+            if (amount > account.stash) {
+                await interaction.reply({ content:`You only have ${account.stash} in your stash. Please obtain more salt.`, ephemeral: true});
+            }
+            else {
+                if (!choice?.choice_id){
+                    await interaction.reply({ content:'The choice name you have entered does not exist. Please try again.', ephemeral: true});
+                }
+                else {
+                    account.set({
+                        stash: (account.stash - amount)
+                    })
+                    
+                    try{
+                        let [wager, created] = await Wagers.upsert(
+                            {
+                                user_id: account.user_id,
+                                bet_id: bet.bet_id,
+                                choice_id: choice.choice_id,
+                                amount: amount
+                            }
+                        );
+                        if(created){
+                            state = 'created';
+                            console.log(`Created wager: \n${JSON.stringify(wager)}`);
+                        }
+                        else{
+                            state = 'updated';
+                            console.log(`Updated wager: \n${JSON.stringify(wager)}`);
+                        }
+                        account = await account.save();
+                        console.log(`Locked bet: \n${JSON.stringify(account)}`);
+                        await interaction.reply({ content: `Your bet for ${amount} on ${selection} was ${state}. Your remaining balance is ${account.stash}`, ephemeral: true});
                     }
-                );
-                console.log('Updated User');
-                console.log(updatedAccount);
-                await interaction.reply(`You bet ${bet} on ${choice}. Your remaining balance is ${updatedAccount.stash}`);
+                    catch(err){
+                        await interaction.reply('Something went fucky wucky. Check logs');
+                        console.log(err);
+                    }
+                }
             }
-            catch(err){
-                await interaction.reply('Something went fucky wucky. Check logs');
-                console.log(err)
-            }
+            
         }
     },
 };
