@@ -27,7 +27,7 @@ module.exports = {
 			await interaction.reply({ content:'The bet name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
 		}
-		const choice = await Choices.findOne({ where: { name: name, bet_id: bet.bet_id } });
+		const choice = await Choices.findOne({ where: { name: name.toLowerCase(), bet_id: bet.bet_id } });
 		if (!choice?.choice_id) {
 			await interaction.reply({ content:'The choice name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
@@ -70,8 +70,8 @@ module.exports = {
 			try {
 				await Users.update(
 					{
-						stash: user.stash,
 						wins: user.wins,
+						stash: Math.ceil(user.stash),
 					},
 					{
 						where: { user_id: user.user_id },

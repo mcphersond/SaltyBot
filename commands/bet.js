@@ -91,7 +91,7 @@ module.exports = {
 			if (account.stash < 200) { account.stash = 200; }
 			await Users.update(
 				{
-					stash: account.stash,
+					stash: Math.floor(account.stash),
 				},
 				{
 					where: { username: user.tag },
