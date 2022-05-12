@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Choices, Wagers } = require('../db_objects.js');
+const utils = require('../utils.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -30,11 +31,15 @@ module.exports = {
 			return;
 		}
 		const wagers = Wagers.findAll({ where: { choice_id: choice.choice_id, bet_id: bet.bet_id } });
-		wagers.forEach(async wager => {
-			const odds = 2;
-			const profit = wager.amount * odds;
-			const payout = wager.amount + profit;
-			user = await Users.findOne({ where: { user_id: wager.user_id } });
+		const detailedChoices = await utils.buildDetailedChoices(bet.bet_id);
+		const odds = detailedChoices.find((c) => {
+			return c.choice_id == choice.choice_id;
+		}).odds;
+
+		for (let i = 0; i < wagers.length; i++) {
+			const profit = wagers[i].amount * odds;
+			const payout = wagers[i].amount + profit;
+			user = await Users.findOne({ where: { user_id: wagers[i].user_id } });
 			user.stash = payout + user.stash;
 			try {
 				await Users.update(
@@ -49,7 +54,7 @@ module.exports = {
 			catch (err) {
 				console.log(`Failed to payout ${user.username} : ${err}`);
 			}
-		});
+		}
 		try {
 			await Wagers.destroy({
 				where: { bet_id: bet.bet_id },

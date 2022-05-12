@@ -1,5 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Wagers, Choices } = require('../db_objects.js');
+const { icon, footer } = require('../config.json');
+const { MessageEmbed, MessageManager } = require('discord.js');
+const utils = require('../utils.js');
 /*  TODO: Fix upsert, not gonna work
     TODO: Add support for choice numbers
     TODO: User modify their own bet
@@ -74,12 +77,27 @@ module.exports = {
 						},
 					);
 					console.log(`Updated User: \n${JSON.stringify(account)}`);
-					await interaction.reply({ content: `Your bet for ${amount} on ${selection} was ${state}. Your remaining balance is ${account.stash}`, ephemeral: true });
-					/* message.channel.messages.fetch({around: bet.message_id, limit: 1})
-                            .then(msg => {
-                                const fetchedMsg = msg.first();
-                                fetchedMsg.edit(embed);
-                            })*/
+					const content = await utils.buildDetailedChoices(bet.bet_id);
+					const table = '```' + utils.formatTable(content) + '```';
+
+					const embed = new MessageEmbed()
+						.setColor('#10b981')
+						.setTitle(bet.name)
+						.setDescription('Reactions are only for the bookee.')
+						.addFields(
+							{ name: 'Choices', value: table },
+						)
+						.setTimestamp()
+						.setFooter({ text: footer, iconURL: icon });
+
+
+					interaction.channel.messages.fetch({ around: bet.message_id, limit: 1 })
+						.then(msg => {
+							const fetchedMsg = msg.first();
+							fetchedMsg.edit({ embeds: [embed] });
+						});
+
+					await interaction.reply({ content: `Your bet for ${amount} on ${selection} is in. Your remaining balance is ${account.stash}`, ephemeral: true });
 				}
 				catch (err) {
 					await interaction.reply('Something went fucky wucky. Check logs');

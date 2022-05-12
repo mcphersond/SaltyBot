@@ -80,7 +80,7 @@ module.exports = {
 				}
 				const table = '```' + utils.formatTable(choices) + '```';
 
-				const exampleEmbed = new MessageEmbed()
+				const embed = new MessageEmbed()
 					.setColor('#10b981')
 					.setTitle(newBet.name)
 					.setDescription('Reactions are only for the bookee.')
@@ -89,7 +89,7 @@ module.exports = {
 					)
 					.setTimestamp()
 					.setFooter({ text: footer, iconURL: icon });
-				await interaction.reply({ embeds: [exampleEmbed] });
+				await interaction.reply({ embeds: [embed] });
 				const message = await interaction.fetchReply();
 				let updatedBet = await Bets.update(
 					{
