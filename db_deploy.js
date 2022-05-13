@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
-const { dbUser, dbPass } = require("./config.json")
+const { dbUser, dbPass } = require('./config.json');
+const { logger } = require('./logger.js');
 
 const db = new Sequelize('database', dbUser, dbPass, {
 	host: 'localhost',
@@ -16,4 +17,4 @@ require('./models/Wagers.js')(db, Sequelize.DataTypes);
 const force = process.argv.includes('--force') || process.argv.includes('-f');
 
 db.sync({ force });
-console.log('Database synced');
+logger.info('Database synced');

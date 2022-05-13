@@ -1,18 +1,13 @@
 const { Choices, Wagers } = require('./db_objects.js');
+const { logger } = require('./logger.js');
 
 module.exports = {
-	numberIcons: ['0️', '1️', '2️', '3️', '4️', '5️', '6️', '7️', '8️', '9️'],
-	testchoices: [
-		{ name: 'ayy', total: 1000 },
-		{ name: 'lmao', total: 200 },
-		{ name: 'looooooooong', total: 0 },
-		{ name: 'test', total: 700 },
-	],
 
 	formatTable(choices) {
+		const numberIcons = ['0️', '1️', '2️', '3️', '4️', '5️', '6️', '7️', '8️', '9️'];
 		const optionLength = Math.max('Choice'.length, ...(choices.map(opt => opt.name.length)));
 		const totalLength = Math.max('Odds'.length, ...(choices.map(opt => opt.total.toString().length)));
-		let output = '# '  + 'Choice'.padEnd(optionLength) + '      ' + 'Pool'.padEnd(totalLength) + '      Odds\n';
+		let output = '# ' + 'Choice'.padEnd(optionLength) + '      ' + 'Pool'.padEnd(totalLength) + '      Odds\n';
 
 		for (let i = 0; i < choices.length; i++) {
 			const paddedOpt = choices[i].name.padEnd(optionLength);
@@ -22,7 +17,7 @@ module.exports = {
 			}
 			const paddedTotal = choices[i].total.toString().padEnd(totalLength);
 			const odds = choices[i].odds.toFixed(2);
-			let line = `${this.numberIcons[i + 1]} ${paddedOpt}      ${paddedTotal}      ${odds}`;
+			let line = `${numberIcons[i + 1]} ${paddedOpt}      ${paddedTotal}      ${odds}`;
 			if (i < choices.length - 1) line += '\n';
 			output += line;
 		}

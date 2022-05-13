@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Wagers, Choices } = require('../db_objects.js');
 const { MessageEmbed } = require('discord.js');
 const utils = require('../utils.js');
+const { logger } = require('../logger.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -23,13 +24,12 @@ module.exports = {
 
 	async execute(interaction) {
 		const { user } = interaction;
-		let state = 'created';
 		const name = interaction.options.getString('betname');
 		const selection = interaction.options.getString('choice');
 		let amount = interaction.options.getInteger('amount');
 
 		// Look up the user, or create a user if there isn't one.
-		let account = await Users.findOne({ where: { username: user.tag } });
+		let account = await Users.findOne({ where: { user_id: user.id } });
 		if (!account) {
 			try {
 				account = await Users.create({
@@ -37,10 +37,10 @@ module.exports = {
 					username: user.tag,
 					stash: 2000,
 				});
-				console.log(`Adding new user to database: \n${JSON.stringify(account)}`);
+				logger.info(`Adding new user ${user.tag} to database: ${JSON.stringify(account)}`);
 			}
 			catch (err) {
-				console.log(err);
+				logger.error(err);
 				await interaction.reply('Something went wrong.');
 			}
 		}
@@ -61,10 +61,10 @@ module.exports = {
 			overdraftProtection = true;
 			attemptedAmount = amount;
 			amount = account.stash;
-		} 
+		}
 
 		const bet = await Bets.findOne({ where: { name: name } });
-		
+
 		if (!bet?.bet_id) {
 			await interaction.reply({ content:'The bet name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
@@ -88,12 +88,10 @@ module.exports = {
 				},
 			);
 			if (created) {
-				state = 'created';
-				console.log(`Created wager: \n\t\t${JSON.stringify(wager)}`);
+				logger.info(`Created wager: ${JSON.stringify(wager)}`);
 			}
 			else {
-				state = 'updated';
-				console.log(`Updated wager: \n\t\t${JSON.stringify(wager)}`);
+				logger.info(`Updated wager: ${JSON.stringify(wager)}`);
 			}
 
 			// If the user's stash has gone below 200, grant them some money so they can keep playing.
@@ -104,16 +102,17 @@ module.exports = {
 					stash: Math.floor(account.stash),
 				},
 				{
-					where: { username: user.tag },
+					where: { user_id: user.id },
 				},
 			);
+			logger.info(`Updated User ${user.tag} stash to ${account.stash}`);
 			const content = await utils.buildDetailedChoices(bet.bet_id);
 			const table = '```' + utils.formatTable(content) + '```';
 
 			const embed = new MessageEmbed()
 				.setColor('#10b981')
 				.setTitle(name)
-				.setDescription('Place a bet by typing `/bet '+ name + ' $choice $amount`')
+				.setDescription('Place a bet by typing `/bet ' + name + ' $choice $amount`')
 				.addFields(
 					{ name: 'Choices', value: table },
 				);
@@ -131,7 +130,7 @@ module.exports = {
 		}
 		catch (err) {
 			await interaction.reply('Sorry, we couldn\'t process your wager.');
-			console.log(err);
+			logger.error(err);
 		}
 	},
 };

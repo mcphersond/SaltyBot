@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { Users, Choices, Bets, Wagers } = require('../db_objects.js');
 const { containsDuplicates, formatTable } = require('../utils.js');
+const { logger } = require('../logger.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -72,21 +73,21 @@ module.exports = {
 					user_id: book,
 					name: name,
 				});
-				console.log(`Adding new bet to database: \n${JSON.stringify(newBet)}`);
+				logger.info(`Adding new bet to database: ${JSON.stringify(newBet)}`);
 				for (let i = 0; i < choices.length; i++) {
 					const newChoice = await Choices.create({
 						bet_id: newBet.bet_id,
 						name: choices[i].name.toLowerCase(),
 						num: (i + 1),
 					});
-					console.log(`Adding new choice to database: \n${JSON.stringify(newChoice)}`);
+					logger.info(`Adding new choice to database: \n${JSON.stringify(newChoice)}`);
 				}
 				const table = '```' + formatTable(choices) + '```';
 
 				const embed = new MessageEmbed()
 					.setColor('#10b981')
 					.setTitle(newBet.name)
-					.setDescription('Place a bet by typing `/bet '+ newBet.name + ' $choice $amount`')
+					.setDescription('Place a bet by typing `/bet ' + newBet.name + ' $choice $amount`')
 					.addFields(
 						{ name: 'Choices', value: table },
 					);
@@ -101,7 +102,7 @@ module.exports = {
 					},
 				);
 				newBet.message_id = message.id;
-				console.log(`Updated Bet: \n${JSON.stringify(newBet)}`);
+				logger.info(`Updated Bet: ${JSON.stringify(newBet)}`);
 				await message.react('🔒');
 				await message.react('🗑');
 
@@ -123,11 +124,11 @@ module.exports = {
 										where: { bet_id: newBet.bet_id },
 									},
 								);
-								console.log(`Locked bet: ${newBet.name}`);
+								logger.info(`Locked bet: ${newBet.name}`);
 								return;
 							}
 							catch (err) {
-								console.log(err);
+								logger.error(err);
 								return;
 							}
 						}
@@ -140,6 +141,7 @@ module.exports = {
 								await Choices.destroy({
 									where: { bet_id: newBet.bet_id },
 								});
+								logger.info(`Destroyed bet ${newBet.bed_id} and all assocaited choices.`);
 								const results = await Wagers.findAll({ where: { bet_id: newBet.bet_id } });
 								for (let i = 0; i < results.length; i++) {
 									const user = await Users.findOne({ where: { user_id: results[i].user_id } });
@@ -153,13 +155,12 @@ module.exports = {
 											where: { user_id: user.user_id },
 										},
 									);
-									console.log(`Refunded Wager: ${ amount } --> ${ user.username }`);
+									logger.info(`Refunded Wager: ${ amount } --> ${ user.username } Stash: ${user.stash}`);
 								}
-								console.log({ content: 'Bet destroyed! Any wagers made have been refunded.', ephemeral: true });
 								return;
 							}
 							catch (err) {
-								console.log(err);
+								logger.error(err);
 								return;
 							}
 						}
@@ -170,7 +171,7 @@ module.exports = {
 
 			}
 			catch (err) {
-				console.log(err);
+				logger.error(err);
 				await interaction.reply('Something got fucky wucky, please try again');
 				return;
 			}
