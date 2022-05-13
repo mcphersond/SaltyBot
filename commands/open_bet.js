@@ -1,8 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { Users, Choices, Bets, Wagers } = require('../db_objects.js');
-const utils = require('../utils.js');
-const { containsDuplicates } = require('../utils.js');
+const { containsDuplicates, formatTable } = require('../utils.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -82,7 +81,7 @@ module.exports = {
 					});
 					console.log(`Adding new choice to database: \n${JSON.stringify(newChoice)}`);
 				}
-				const table = '```' + utils.formatTable(choices) + '```';
+				const table = '```' + formatTable(choices) + '```';
 
 				const embed = new MessageEmbed()
 					.setColor('#10b981')
@@ -93,7 +92,7 @@ module.exports = {
 					);
 				await interaction.reply({ embeds: [embed] });
 				const message = await interaction.fetchReply();
-				let updatedBet = await Bets.update(
+				await Bets.update(
 					{
 						message_id: message.id,
 					},
@@ -116,7 +115,7 @@ module.exports = {
 						if (reaction.emoji.name === '🔒') {
 							message.reply('Bets are locked!');
 							try {
-								updatedBet = await Bets.update(
+								await Bets.update(
 									{
 										is_open: false,
 									},
@@ -124,7 +123,8 @@ module.exports = {
 										where: { bet_id: newBet.bet_id },
 									},
 								);
-								console.log(`Locked bet: ${updatedBet.name}`);
+								console.log(`Locked bet: ${newBet.name}`);
+								return;
 							}
 							catch (err) {
 								console.log(err);
@@ -156,6 +156,7 @@ module.exports = {
 									console.log(`Refunded Wager: ${ amount } --> ${ user.username }`);
 								}
 								console.log({ content: 'Bet destroyed! Any wagers made have been refunded.', ephemeral: true });
+								return;
 							}
 							catch (err) {
 								console.log(err);
