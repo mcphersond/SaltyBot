@@ -11,19 +11,19 @@ module.exports = {
 		.setDescription('Open a bet')
 		.addStringOption(option =>
 			option.setName('name')
-				.setDescription('Enter name of wager')
+				.setDescription('The title of this bet')
 				.setRequired(true))
 		.addStringOption(option =>
 			option.setName('option1')
-				.setDescription('Enter name of wager')
+				.setDescription('Enter option name')
 				.setRequired(true))
 		.addStringOption(option =>
 			option.setName('option2')
-				.setDescription('Enter name of wager')
+				.setDescription('Enter option name')
 				.setRequired(true))
 		.addStringOption(option =>
 			option.setName('option3')
-				.setDescription('Enter name of wager')
+				.setDescription('Enter option name')
 				.setRequired(false))
 		.addStringOption(option =>
 			option.setName('option4')
@@ -125,7 +125,7 @@ module.exports = {
 										where: { bet_id: newBet.bet_id },
 									},
 								);
-								console.log(`Locked bet: \n${JSON.stringify(updatedBet)}`);
+								console.log(`Locked bet: ${updatedBet.name}`);
 							}
 							catch (err) {
 								console.log(err);
@@ -154,7 +154,7 @@ module.exports = {
 											where: { user_id: user.user_id },
 										},
 									);
-									console.log(`Returned Bet: \n${JSON.stringify(user)}`);
+									console.log(`Refunded Wager: ${ amount } --> ${ user.username }`);
 								}
 								console.log({ content: 'Bet destroyed! Any wagers made have been refunded.', ephemeral: true });
 							}

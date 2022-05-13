@@ -12,7 +12,6 @@ module.exports = {
 	formatTable(choices) {
 		const optionLength = Math.max('Choice'.length, ...(choices.map(opt => opt.name.length)));
 		const totalLength = Math.max('Odds'.length, ...(choices.map(opt => opt.total.toString().length)));
-		console.log(optionLength)
 		let output = '# '  + 'Choice'.padEnd(optionLength) + '      ' + 'Pool'.padEnd(totalLength) + '      Odds\n';
 
 		for (let i = 0; i < choices.length; i++) {
@@ -34,27 +33,16 @@ module.exports = {
 	determineOdds(choices) {
 		let excludedPool = 0;
 		let num = 1;
-		console.log('Odds determining', JSON.stringify(choices));
 		for (let i = 0; i < choices.length; i++) {
 			excludedPool = 0;
-			console.log('i', i);
 			num = choices[i].num;
-			console.log('num', num);
 			for (let k = 0; k < choices.length; k++) {
-				console.log('k', k);
-				console.log('k total', choices[k].total);
-				console.log('k num', choices[k].num);
 				if (choices[k].num != num) {
-					console.log('Entering excluded');
 					excludedPool += choices[k].total;
 				}
 			}
-			console.log('Excluded', excludedPool);
-			console.log('total', choices[i].total);
-			console.log((excludedPool / choices[i].total));
 			choices[i].odds = excludedPool / choices[i].total;
 		}
-		console.log(JSON.stringify(choices));
 		return choices;
 	},
 

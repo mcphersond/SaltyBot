@@ -93,7 +93,7 @@ module.exports = {
 				where: { bet_id: bet.bet_id },
 			});
 			console.log(`Destroyed all wagers, choices, and the bet associated with bet ${bet.name}`);
-			await interaction.reply('Doubters have been paid out.');
+			await interaction.reply(`Payouts incoming for **${bet.name}**! The winner was **${name}**.`);
 		}
 		catch (err) {
 			console.log(`Failed to destroy something associated with bet ${bet.name} : ${err}`);
