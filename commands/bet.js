@@ -1,13 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Wagers, Choices } = require('../db_objects.js');
-const { icon, footer } = require('../config.json');
 const { MessageEmbed } = require('discord.js');
 const utils = require('../utils.js');
-/*  TODO: Fix upsert, not gonna work
-    TODO: Add support for choice numbers
-    TODO: User modify their own bet
-    TODO: Replace if/else checks with returns
- */
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('bet')
@@ -31,7 +26,7 @@ module.exports = {
 		let state = 'created';
 		const name = interaction.options.getString('betname');
 		const selection = interaction.options.getString('choice');
-		var amount = interaction.options.getInteger('amount');
+		let amount = interaction.options.getInteger('amount');
 
 		// Look up the user, or create a user if there isn't one.
 		let account = await Users.findOne({ where: { username: user.tag } });

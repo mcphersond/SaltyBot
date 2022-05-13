@@ -3,11 +3,7 @@ const { Users, Bets, Wagers, Choices } = require('../db_objects.js');
 const { icon, footer } = require('../config.json');
 const { MessageEmbed } = require('discord.js');
 const utils = require('../utils.js');
-/*  TODO: Fix upsert, not gonna work
-    TODO: Add support for choice numbers
-    TODO: User modify their own bet
-    TODO: Replace if/else checks with returns
- */
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('configure')
@@ -25,7 +21,7 @@ module.exports = {
 		const amount = interaction.options.getInteger('amount');
 
 		if (amount <= 0) {
-			await interaction.reply({ content:"You can't bet less than 1 salt. Please try again.", ephemeral: true });
+			await interaction.reply({ content:'You can\'t bet less than 1 salt. Please try again.', ephemeral: true });
 			return;
 		}
 
@@ -48,7 +44,7 @@ module.exports = {
 
 		// Set the user's defaultWager.
 		try {
-			var updated = await Users.update(
+			const updated = await Users.update(
 				{
 					defaultWager: amount,
 				},
@@ -57,10 +53,10 @@ module.exports = {
 				},
 			);
 			console.log(`Updated User's default wager: \n${JSON.stringify(updated)}`);
-			await interaction.reply({ content: 'Your default bet is now **$'+ amount +'**\nYou can still specify another amount using `/bet $name $choice $amount`\nIf you can\'t afford this amount in the future, your bet will be the maximum amount that you can afford.', ephemeral: true });
+			await interaction.reply({ content: 'Your default bet is now **$' + amount + '**\nYou can still specify another amount using `/bet $name $choice $amount`\nIf you can\'t afford this amount in the future, your bet will be the maximum amount that you can afford.', ephemeral: true });
 		}
 		catch (err) {
-			await interaction.reply("We couldn't update your default wager amount.");
+			await interaction.reply('We couldn\'t update your default wager amount.');
 			console.log(err);
 		}
 	},

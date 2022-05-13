@@ -13,13 +13,14 @@ module.exports = {
 				.setDescription('Please enter the name of the bet pool you would like to close out.')
 				.setRequired(true))
 		.addStringOption(option =>
-			option.setName('name')
+			option.setName('choice')
 				.setDescription('Please enter the name of the winning choice.')
 				.setRequired(true)),
 
 
 	async execute(interaction) {
 		const name = interaction.options.getString('name');
+		const bookee = interaction.user.id;
 		const betname = interaction.options.getString('betname');
 		const bet = await Bets.findOne({ where: { name: betname } });
 		let user = '';
@@ -27,12 +28,16 @@ module.exports = {
 			await interaction.reply({ content:'The bet name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
 		}
+		if (bookee != bet.user_id) {
+			await interaction.reply({ content:'The bet can only be paid out by the original bookee. Please try again.', ephemeral: true });
+			return;
+		}
 		const choice = await Choices.findOne({ where: { name: name.toLowerCase(), bet_id: bet.bet_id } });
 		if (!choice?.choice_id) {
 			await interaction.reply({ content:'The choice name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
 		}
-				
+
 		// Assign a loss to each loser.
 		const losers = await Wagers.findAll({ where: { choice_id: {[Op.ne]: choice.choice_id}, bet_id: bet.bet_id } });
 		for (let i = 0; i < losers.length; i++) {
