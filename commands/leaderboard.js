@@ -7,7 +7,7 @@ module.exports = {
 		.setName('leaderboard')
 		.setDescription('Who has the most crippling gambling addiction?'),
 	async execute(interaction) {
-		const results = await Users.findAll({ order: ['stash', 'DESC'], limit: 10 });
+		const results = await Users.findAll({ order:[ ['stash', 'DESC'] ], limit: 10 });
 		if (!results) {
 			await interaction.reply({ content: 'Something went wrong.', ephemeral: true });
 		}
