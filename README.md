@@ -24,7 +24,10 @@ Gambling bot
 
 1. Run the following commands for setup:
     ``` npm install ``` To retrieve packages
-    ``` node command_deploy.js ``` To register slash commands with Discord.
+    ``` node command_deploy.js [-s] [-p] [-g] ``` To register slash commands with Discord. 
+    -s    deploys to the staging guild set in your config.json 
+    -p    deploys to the production guild set in your config.json
+    -g    deploys globally.
     ``` node db_deploy.js ``` To set up a local SQLite DB for tracking bets.
 
     - To Reset your betting database:

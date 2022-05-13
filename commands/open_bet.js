@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { Users, Choices, Bets, Wagers } = require('../db_objects.js');
-const { icon, footer } = require('../config.json');
 const utils = require('../utils.js');
 const { containsDuplicates } = require('../utils.js');
 
