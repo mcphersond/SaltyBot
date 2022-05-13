@@ -31,8 +31,9 @@ module.exports = {
 			.setTitle(`$${results.stash}`)
 			.setAuthor({ name: "User " + user.tag, iconURL: icon })
 			.addFields(
-				{ name: 'Win/Loss Ratio', value: winrate.toFixed(2), inline: true },
-				{ name: 'Bets Placed', value: "" + (results.wins + results.losses), inline: true }
+				{ name: 'W/L Ratio', value: winrate.toFixed(2), inline: true },
+				{ name: 'Bets Placed', value: "" + (results.wins + results.losses), inline: true },
+				{ name: 'Default Wager', value: "$" + (results.defaultWager), inline: true }
 			);
 		await interaction.reply({ embeds: [embed] , ephemeral: true });
 	},

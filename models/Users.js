@@ -24,6 +24,11 @@ module.exports = (sequelize, DataTypes) => {
 			defaultValue: 0,
 			allowNull: false
 		},
+		defaultWager: {
+			type: DataTypes.INTEGER,
+			defaultValue: 100,
+			allowNull: false
+		}
 	}, {
 		timestamps: false,
 	});

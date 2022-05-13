@@ -23,7 +23,7 @@ module.exports = {
 		.addIntegerOption(option =>
 			option.setName('amount')
 				.setDescription('Please enter how much salt you want to bet?')
-				.setRequired(true)),
+				.setRequired(false)),
 
 
 	async execute(interaction) {
@@ -31,12 +31,9 @@ module.exports = {
 		let state = 'created';
 		const name = interaction.options.getString('betname');
 		const selection = interaction.options.getString('choice');
-		const amount = interaction.options.getInteger('amount');
-		if (amount <= 0) {
-			await interaction.reply({ content:'You bet less than 1 salt. Please try again.', ephemeral: true });
-			return;
-		}
-		const bet = await Bets.findOne({ where: { name: name } });
+		var amount = interaction.options.getInteger('amount');
+
+		// Look up the user, or create a user if there isn't one.
 		let account = await Users.findOne({ where: { username: user.tag } });
 		if (!account) {
 			try {
@@ -52,6 +49,27 @@ module.exports = {
 				await interaction.reply('Something went wrong.');
 			}
 		}
+
+		// Validate the wager amount. If the user didn't provide one, use their built-in default.
+		// The user can't bet more than what's in their stash.
+		// If the user bets a negative amount, they are all-in.
+		let overdraftProtection = false;
+		let allIn = false;
+		let attemptedAmount = 0;
+		if (!amount) amount = account.defaultWager;
+		if (amount <= 0) {
+			allIn = true;
+			attemptedAmount = amount;
+			amount = account.stash;
+		}
+		if (amount > account.stash) {
+			overdraftProtection = true;
+			attemptedAmount = amount;
+			amount = account.stash;
+		} 
+
+		const bet = await Bets.findOne({ where: { name: name } });
+		
 		if (!bet?.bet_id) {
 			await interaction.reply({ content:'The bet name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
@@ -61,11 +79,7 @@ module.exports = {
 			return;
 		}
 		const choice = await Choices.findOne({ where: { name: selection.toLowerCase(), bet_id: bet.bet_id } });
-		if (amount > account.stash) {
-			await interaction.reply({ content:`You only have ${account.stash} in your stash. Please obtain more salt.`, ephemeral: true });
-			return;
-		}
-		else if (!choice?.choice_id) {
+		if (!choice?.choice_id) {
 			await interaction.reply({ content:'The choice name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
 		}
@@ -80,13 +94,14 @@ module.exports = {
 			);
 			if (created) {
 				state = 'created';
-				console.log(`Created wager: \n${JSON.stringify(wager)}`);
+				console.log(`Created wager: \n\t\t${JSON.stringify(wager)}`);
 			}
 			else {
 				state = 'updated';
-				console.log(`Updated wager: \n${JSON.stringify(wager)}`);
+				console.log(`Updated wager: \n\t\t${JSON.stringify(wager)}`);
 			}
-			// Sets default stash value.
+
+			// If the user's stash has gone below 200, grant them some money so they can keep playing.
 			account.stash = (account.stash - amount);
 			if (account.stash < 200) { account.stash = 200; }
 			await Users.update(
@@ -97,7 +112,6 @@ module.exports = {
 					where: { username: user.tag },
 				},
 			);
-			console.log(`Updated User: \n${JSON.stringify(account)}`);
 			const content = await utils.buildDetailedChoices(bet.bet_id);
 			const table = '```' + utils.formatTable(content) + '```';
 
@@ -115,10 +129,13 @@ module.exports = {
 					fetchedMsg.edit({ embeds: [embed] });
 				});
 
-			await interaction.reply({ content: `Your bet for ${amount} on ${selection} is in. Your remaining balance is ${account.stash}`, ephemeral: true });
+			let response = `Your bet for **$${amount}** on **${selection}** is in. Your current balance is **$${account.stash}**.`;
+			if (overdraftProtection) response = `*You tried to bet **$${attemptedAmount}**, but you could only afford to bet **$${amount}**.*\n` + response;
+			if (allIn) response = `*You tried to bet **$${attemptedAmount}**, which was interpreted as going all in. Good luck!*\n` + response;
+			await interaction.reply({ content: response, ephemeral: true });
 		}
 		catch (err) {
-			await interaction.reply('Something went fucky wucky. Check logs');
+			await interaction.reply('Sorry, we couldn\'t process your wager.');
 			console.log(err);
 		}
 	},
