@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Choices, Wagers } = require('../db_objects.js');
 const utils = require('../utils.js');
 const { Op } = require('sequelize');
-
+const { logger } = require('../logger.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -13,13 +13,14 @@ module.exports = {
 				.setDescription('Please enter the name of the bet pool you would like to close out.')
 				.setRequired(true))
 		.addStringOption(option =>
-			option.setName('name')
+			option.setName('choice')
 				.setDescription('Please enter the name of the winning choice.')
 				.setRequired(true)),
 
 
 	async execute(interaction) {
-		const name = interaction.options.getString('name');
+		const name = interaction.options.getString('choice').toLowerCase();
+		const bookee = interaction.user.id;
 		const betname = interaction.options.getString('betname');
 		const bet = await Bets.findOne({ where: { name: betname } });
 		let user = '';
@@ -27,30 +28,35 @@ module.exports = {
 			await interaction.reply({ content:'The bet name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
 		}
+		if (bookee != bet.user_id) {
+			await interaction.reply({ content:'The bet can only be paid out by the original bookee. Please try again.', ephemeral: true });
+			return;
+		}
 		const choice = await Choices.findOne({ where: { name: name.toLowerCase(), bet_id: bet.bet_id } });
 		if (!choice?.choice_id) {
 			await interaction.reply({ content:'The choice name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
 		}
-				
+
 		// Assign a loss to each loser.
-		const losers = await Wagers.findAll({ where: { choice_id: {[Op.ne]: choice.choice_id}, bet_id: bet.bet_id } });
+		const losers = await Wagers.findAll({ where: { choice_id: { [Op.ne]: choice.choice_id }, bet_id: bet.bet_id } });
 		for (let i = 0; i < losers.length; i++) {
 			user = await Users.findOne({ where: { user_id: losers[i].user_id } });
 			user.losses = user.losses + 1;
 			try {
 				await Users.update(
 					{
-						stash: user.stash,
 						wins: user.wins,
 					},
 					{
 						where: { user_id: user.user_id },
 					},
 				);
+				logger.info(`Updated user ${user.username} : Add loss`);
 			}
+
 			catch (err) {
-				console.log(`Failed to update losses for ${user.username} : ${err}`);
+				logger.error(`Failed to update losses for ${user.username} : ${err}`);
 			}
 		}
 
@@ -77,9 +83,10 @@ module.exports = {
 						where: { user_id: user.user_id },
 					},
 				);
+				logger.info(`Paid out user: ${payout} ---> ${user.username} Stash: ${user.stash}`);
 			}
 			catch (err) {
-				console.log(`Failed to payout ${user.username} : ${err}`);
+				logger.error(`Failed to payout ${user.username} : ${err}`);
 			}
 		}
 		try {
@@ -92,11 +99,11 @@ module.exports = {
 			await Choices.destroy({
 				where: { bet_id: bet.bet_id },
 			});
-			console.log(`Destroyed all wagers, choices, and the bet associated with bet ${bet.name}`);
+			logger.info(`Destroyed all wagers, choices, and the bet associated with bet ${bet.name}`);
 			await interaction.reply(`Payouts incoming for **${bet.name}**! The winner was **${name}**.`);
 		}
 		catch (err) {
-			console.log(`Failed to destroy something associated with bet ${bet.name} : ${err}`);
+			logger.error(`Failed to destroy something associated with bet ${bet.name} : ${err}`);
 		}
 	},
 };

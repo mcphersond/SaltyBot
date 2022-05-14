@@ -17,18 +17,18 @@ module.exports = (sequelize, DataTypes) => {
 		wins: {
 			type: DataTypes.INTEGER,
 			defaultValue: 0,
-			allowNull: false
+			allowNull: false,
 		},
 		losses: {
 			type: DataTypes.INTEGER,
 			defaultValue: 0,
-			allowNull: false
+			allowNull: false,
 		},
 		defaultWager: {
 			type: DataTypes.INTEGER,
 			defaultValue: 100,
-			allowNull: false
-		}
+			allowNull: false,
+		},
 	}, {
 		timestamps: false,
 	});

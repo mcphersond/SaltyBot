@@ -2,3 +2,4 @@ config.json
 database.sqlite
 node_modules
 workspace.code_workspace
+logs/

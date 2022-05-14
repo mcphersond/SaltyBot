@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
 const { dbUser, dbPass } = require('./config.json');
+const { logger } = require('./logger.js');
 
 const db = new Sequelize('database', dbUser, dbPass, {
 	host: 'localhost',
