@@ -165,8 +165,24 @@ module.exports = {
 							}
 						}
 					})
-					.catch(() => {
-						message.reply('1 Minute and 30 seconds has passed. Locking bets.');
+					.catch(async () => {
+						try {
+							await Bets.update(
+								{
+									is_open: false,
+								},
+								{
+									where: { bet_id: newBet.bet_id },
+								},
+							);
+							logger.info(`Locked bet: ${newBet.name}`);
+							message.reply('1 Minute and 30 seconds has passed. Locking bets.');
+							return;
+						}
+						catch (err) {
+							logger.error(err);
+							return;
+						}
 					});
 
 			}
