@@ -50,6 +50,8 @@ module.exports = {
 			}
 		}
 
+		
+
 		// Validate the wager amount. If the user didn't provide one, use their built-in default.
 		// The user can't bet more than what's in their stash.
 		// If the user bets a negative amount, they are all-in.
@@ -69,7 +71,7 @@ module.exports = {
 		} 
 
 		const bet = await Bets.findOne({ where: { name: name } });
-		
+
 		if (!bet?.bet_id) {
 			await interaction.reply({ content:'The bet name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
@@ -84,7 +86,17 @@ module.exports = {
 			return;
 		}
 		try {
-			const [wager, created] = await Wagers.upsert(
+
+			// Check for duplicate wagers. Normally this would be done with unique indexes in sequelize, but our db doesn't support it.
+			let existingBet = await Wagers.findOne({ where: { user_id: account.user_id, bet_id: bet.bet_id }});
+			console.log('Existing bet: ', existingBet);
+			if (existingBet) {
+				await interaction.reply({ content:'You already have a wager in place.', ephemeral: true });
+				return;
+			}
+
+
+			const [wager, created] = await Wagers.create(
 				{
 					user_id: account.user_id,
 					bet_id: bet.bet_id,

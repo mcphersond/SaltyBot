@@ -6,9 +6,15 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 			autoIncrement: true,
 		},
-		user_id: DataTypes.STRING,
-		bet_id: DataTypes.INTEGER,
-		choice_id: DataTypes.INTEGER,
+		user_id: {
+			type: DataTypes.STRING
+		},
+		bet_id: {
+			type: DataTypes.INTEGER
+		},
+		choice_id: {
+			type: DataTypes.INTEGER
+		},
 		amount: {
 			type: DataTypes.INTEGER,
 			defaultValue: 100,
