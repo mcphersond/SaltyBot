@@ -1,8 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { Users, Bets, Wagers, Choices } = require('../db_objects.js');
-const { icon, footer } = require('../config.json');
-const { MessageEmbed } = require('discord.js');
-const utils = require('../utils.js');
+const { Users } = require('../db_objects.js');
+const { logger } = require('../logger.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -26,7 +24,7 @@ module.exports = {
 		}
 
 		// Try to find the user's account. If they don't have one, make one.
-		let account = await Users.findOne({ where: { username: user.tag } });
+		let account = await Users.findOne({ where: { user_id: user.id } });
 		if (!account) {
 			try {
 				account = await Users.create({
@@ -34,30 +32,30 @@ module.exports = {
 					username: user.tag,
 					stash: 2000,
 				});
-				console.log(`Adding new user to database: \n${JSON.stringify(account)}`);
+				logger.info(`Adding new user ${user.tag} to database: ${JSON.stringify(account)}`);
 			}
 			catch (err) {
-				console.log(err);
+				logger.error(err);
 				await interaction.reply('Something went wrong.');
 			}
 		}
 
 		// Set the user's defaultWager.
 		try {
-			const updated = await Users.update(
+			await Users.update(
 				{
 					defaultWager: amount,
 				},
 				{
-					where: { username: user.tag },
+					where: { user_id: user.id },
 				},
 			);
-			console.log(`Updated User's default wager: \n${JSON.stringify(updated)}`);
+			logger.info(`Updated User ${user.tag}'s default wager: ${JSON.stringify(amount)}`);
 			await interaction.reply({ content: 'Your default bet is now **$' + amount + '**\nYou can still specify another amount using `/bet $name $choice $amount`\nIf you can\'t afford this amount in the future, your bet will be the maximum amount that you can afford.', ephemeral: true });
 		}
 		catch (err) {
 			await interaction.reply('We couldn\'t update your default wager amount.');
-			console.log(err);
+			logger.info(err);
 		}
 	},
 };

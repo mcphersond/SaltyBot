@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users } = require('../db_objects.js');
+const { logger } = require('../logger.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -17,11 +18,11 @@ module.exports = {
 					username: user.tag,
 					stash: 2000,
 				});
-				console.log(`Adding new user to database: \n${JSON.stringify(newUser)}`);
+				logger.info(`Adding new user ${user.tag} to database: ${JSON.stringify(newUser)}`);
 				await interaction.reply({ content: 'You have been registered with 2000 Salt!', ephemeral: true });
 			}
 			catch (err) {
-				console.log(err);
+				logger.error(err);
 				await interaction.reply('Something got fucky wucky, please try again');
 			}
 		}
