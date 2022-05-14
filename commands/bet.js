@@ -1,9 +1,13 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Wagers, Choices } = require('../db_objects.js');
+const { icon, footer } = require('../config.json');
 const { MessageEmbed } = require('discord.js');
 const utils = require('../utils.js');
-const { logger } = require('../logger.js');
-
+/*  TODO: Fix upsert, not gonna work
+    TODO: Add support for choice numbers
+    TODO: User modify their own bet
+    TODO: Replace if/else checks with returns
+ */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('bet')
@@ -24,12 +28,13 @@ module.exports = {
 
 	async execute(interaction) {
 		const { user } = interaction;
+		let state = 'created';
 		const name = interaction.options.getString('betname');
 		const selection = interaction.options.getString('choice');
-		let amount = interaction.options.getInteger('amount');
+		var amount = interaction.options.getInteger('amount');
 
 		// Look up the user, or create a user if there isn't one.
-		let account = await Users.findOne({ where: { user_id: user.id } });
+		let account = await Users.findOne({ where: { username: user.tag } });
 		if (!account) {
 			try {
 				account = await Users.create({
@@ -37,10 +42,10 @@ module.exports = {
 					username: user.tag,
 					stash: 2000,
 				});
-				logger.info(`Adding new user ${user.tag} to database: ${JSON.stringify(account)}`);
+				console.log(`Adding new user to database: \n${JSON.stringify(account)}`);
 			}
 			catch (err) {
-				logger.error(err);
+				console.log(err);
 				await interaction.reply('Something went wrong.');
 			}
 		}
@@ -63,7 +68,7 @@ module.exports = {
 			overdraftProtection = true;
 			attemptedAmount = amount;
 			amount = account.stash;
-		}
+		} 
 
 		const bet = await Bets.findOne({ where: { name: name } });
 
@@ -90,8 +95,7 @@ module.exports = {
 				return;
 			}
 
-
-			const [wager, created] = await Wagers.create(
+			const wager = await Wagers.create(
 				{
 					user_id: account.user_id,
 					bet_id: bet.bet_id,
@@ -99,11 +103,14 @@ module.exports = {
 					amount: amount,
 				},
 			);
+			const created = wager.dataValues;
 			if (created) {
-				logger.info(`Created wager: ${JSON.stringify(wager)}`);
+				state = 'created';
+				console.log(`Created wager: \n\t\t${JSON.stringify(wager)}`);
 			}
 			else {
-				logger.info(`Updated wager: ${JSON.stringify(wager)}`);
+				state = 'updated';
+				console.log(`Updated wager: \n\t\t${JSON.stringify(wager)}`);
 			}
 
 			// If the user's stash has gone below 200, grant them some money so they can keep playing.
@@ -114,17 +121,16 @@ module.exports = {
 					stash: Math.floor(account.stash),
 				},
 				{
-					where: { user_id: user.id },
+					where: { username: user.tag },
 				},
 			);
-			logger.info(`Updated User ${user.tag} stash to ${account.stash}`);
 			const content = await utils.buildDetailedChoices(bet.bet_id);
 			const table = '```' + utils.formatTable(content) + '```';
 
 			const embed = new MessageEmbed()
 				.setColor('#10b981')
 				.setTitle(name)
-				.setDescription('Place a bet by typing `/bet ' + name + ' $choice $amount`')
+				.setDescription('Place a bet by typing `/bet '+ name + ' $choice $amount`')
 				.addFields(
 					{ name: 'Choices', value: table },
 				);
@@ -142,7 +148,7 @@ module.exports = {
 		}
 		catch (err) {
 			await interaction.reply('Sorry, we couldn\'t process your wager.');
-			logger.error(err);
+			console.log(err);
 		}
 	},
 };

@@ -2,6 +2,12 @@
 
 Gambling bot
 
+## Project Links
+- [Trello](https://trello.com/b/vRkTunq5/saltybot)
+
+## Database Architecture
+![Diagram](./misc/diagram.png)
+
 ## First Time Setup on a local machine or server
 1. Clone this repository
     `git clone https://github.com/mcphersond/SaltyBot.git`

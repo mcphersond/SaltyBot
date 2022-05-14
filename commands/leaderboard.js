@@ -13,16 +13,19 @@ module.exports = {
 			await interaction.reply({ content: 'Something went wrong.', ephemeral: true });
 		}
 
+		const usernameLength = Math.max('User'.length, ...(results.map(user => user.username.length)));
+		const stashLength = Math.max('Stash'.length, ...(results.map(user => user.stash.toString().length)));
+
 		// Build a table of winners.
-		let table = '';
+		let table = `# ${'User'.padEnd(usernameLength)}    ${'Stash'.padEnd(stashLength)}    W/L     Bets Won\n`;
 		for (let i = 0; i < results.length; i++) {
 			const user = results[i];
-			const line = `${ user.username }  ${ user.stash }\n`;
+			let winrate = user.wins.toFixed(2);
+			if (user.losses > 0) winrate = (user.wins / user.losses).toFixed(2);
+			const line = `${ i+1 } ${ user.username.padEnd(usernameLength) }    ${ user.stash.toString().padEnd(stashLength) }    ${ winrate }    ${ user.wins }\n`;
 			table += line;
 		}
-
-		let winrate = results.wins;
-		if (results.losses > 0) winrate = results.wins / results.losses;
+		
 		const embed = new MessageEmbed()
 			.setColor('#10b981')
 			.setTitle('Leaderboard')
