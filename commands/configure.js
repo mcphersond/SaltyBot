@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users } = require('../db_objects.js');
 const { logger } = require('../logger.js');
+const { devId } = require('../config.json');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -73,9 +74,14 @@ module.exports = {
 		}
 		// Shutdown the bot.
 		else if (subcommand === 'shutdown') {
-			await interaction.reply({ content:'Bye bye.', ephemeral: true });
-			logger.warn(`Shutdown process initiated by ${interaction.user.tag}. Shutting down.`);
-			process.exit();
+			const { user } = interaction;
+			if (devId.includes(user.id)) {
+				await interaction.reply({ content:'Bye bye.', ephemeral: true });
+				logger.warn(`Shutdown process initiated by ${interaction.user.tag}. Shutting down.`);
+				process.exit();
+			}
+			await interaction.reply({ content:'Only developers can use this command.', ephemeral: true });
+
 		}
 
 	},
