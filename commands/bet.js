@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Users, Bets, Wagers, Choices } = require('../db_objects.js');
-const { icon, footer } = require('../config.json');
 const { MessageEmbed } = require('discord.js');
 const utils = require('../utils.js');
+const { logger } = require('../logger.js');
 /*  TODO: Fix upsert, not gonna work
     TODO: Add support for choice numbers
     TODO: User modify their own bet
@@ -31,10 +31,10 @@ module.exports = {
 		let state = 'created';
 		const name = interaction.options.getString('betname');
 		const selection = interaction.options.getString('choice');
-		var amount = interaction.options.getInteger('amount');
+		let amount = interaction.options.getInteger('amount');
 
 		// Look up the user, or create a user if there isn't one.
-		let account = await Users.findOne({ where: { username: user.tag } });
+		let account = await Users.findOne({ where: { user_id: user.id } });
 		if (!account) {
 			try {
 				account = await Users.create({
@@ -42,15 +42,14 @@ module.exports = {
 					username: user.tag,
 					stash: 2000,
 				});
-				console.log(`Adding new user to database: \n${JSON.stringify(account)}`);
+				logger.info(`Adding new user to database: \n${JSON.stringify(account)}`);
 			}
 			catch (err) {
-				console.log(err);
+				logger.error(err);
 				await interaction.reply('Something went wrong.');
 			}
 		}
 
-		
 
 		// Validate the wager amount. If the user didn't provide one, use their built-in default.
 		// The user can't bet more than what's in their stash.
@@ -68,7 +67,7 @@ module.exports = {
 			overdraftProtection = true;
 			attemptedAmount = amount;
 			amount = account.stash;
-		} 
+		}
 
 		const bet = await Bets.findOne({ where: { name: name } });
 
@@ -88,8 +87,7 @@ module.exports = {
 		try {
 
 			// Check for duplicate wagers. Normally this would be done with unique indexes in sequelize, but our db doesn't support it.
-			let existingBet = await Wagers.findOne({ where: { user_id: account.user_id, bet_id: bet.bet_id }});
-			console.log('Existing bet: ', existingBet);
+			const existingBet = await Wagers.findOne({ where: { user_id: account.user_id, bet_id: bet.bet_id } });
 			if (existingBet) {
 				await interaction.reply({ content:'You already have a wager in place.', ephemeral: true });
 				return;
@@ -106,11 +104,11 @@ module.exports = {
 			const created = wager.dataValues;
 			if (created) {
 				state = 'created';
-				console.log(`Created wager: \n\t\t${JSON.stringify(wager)}`);
+				logger.info(`Created wager: \n\t\t${JSON.stringify(wager)}`);
 			}
 			else {
 				state = 'updated';
-				console.log(`Updated wager: \n\t\t${JSON.stringify(wager)}`);
+				logger.info(`Updated wager: \n\t\t${JSON.stringify(wager)}`);
 			}
 
 			// If the user's stash has gone below 200, grant them some money so they can keep playing.
@@ -121,7 +119,7 @@ module.exports = {
 					stash: Math.floor(account.stash),
 				},
 				{
-					where: { username: user.tag },
+					where: { user_id: user.id },
 				},
 			);
 			const content = await utils.buildDetailedChoices(bet.bet_id);
@@ -130,7 +128,7 @@ module.exports = {
 			const embed = new MessageEmbed()
 				.setColor('#10b981')
 				.setTitle(name)
-				.setDescription('Place a bet by typing `/bet '+ name + ' $choice $amount`')
+				.setDescription('Place a bet by typing `/bet ' + name + ' $choice $amount`')
 				.addFields(
 					{ name: 'Choices', value: table },
 				);
@@ -148,7 +146,7 @@ module.exports = {
 		}
 		catch (err) {
 			await interaction.reply('Sorry, we couldn\'t process your wager.');
-			console.log(err);
+			logger.error(err);
 		}
 	},
 };
