@@ -28,6 +28,9 @@ module.exports = {
 			await interaction.reply({ content:'The bet name you have entered does not exist. Please try again.', ephemeral: true });
 			return;
 		}
+		if (bet.is_open) {
+			await interaction.reply({ content:'The bet is not locked, please click the 🔒 and then try again.', ephemeral: true });
+		}
 		if (bookee != bet.user_id) {
 			await interaction.reply({ content:'The bet can only be paid out by the original bookee. Please try again.', ephemeral: true });
 			return;
