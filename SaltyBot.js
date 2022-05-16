@@ -16,6 +16,14 @@ for (const file of commandFiles) {
 	client.commands.set(command.data.name, command);
 }
 
+client.buttons = new Collection();
+const buttonFiles = fs.readdirSync('./commands/buttons').filter(file => file.endsWith('.js'));
+
+for (const file of buttonFiles) {
+	const button = require(`./commands/buttons/${file}`);
+	client.buttons.set(button.data.name, button);
+}
+
 client.once('ready', () => {
 	logger.info(`${footer} has started.`);
 });
@@ -26,18 +34,31 @@ client.on('guildCreate', guild => {
 });
 
 client.on('interactionCreate', async interaction => {
-	if (!interaction.isCommand()) return;
+	if (interaction.isCommand()) {
+		const command = client.commands.get(interaction.commandName);
 
-	const command = client.commands.get(interaction.commandName);
+		if (!command) return;
 
-	if (!command) return;
-
-	try {
-		await command.execute(interaction);
+		try {
+			await command.execute(interaction);
+		}
+		catch (error) {
+			console.error(error);
+			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		}
 	}
-	catch (error) {
-		console.error(error);
-		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+
+	if (interaction.isButton()) {
+		let action = interaction.customId.split('_')[0];
+		const button = client.buttons.get(action);
+		if (!button) return;
+
+		try {
+			await button.execute(interaction, client);
+		} catch (error) {
+			console.error(error);
+			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		}
 	}
 });
 
