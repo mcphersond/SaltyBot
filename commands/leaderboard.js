@@ -22,10 +22,10 @@ module.exports = {
 			const user = results[i];
 			let winrate = user.wins.toFixed(2);
 			if (user.losses > 0) winrate = (user.wins / user.losses).toFixed(2);
-			const line = `${ i+1 } ${ user.username.padEnd(usernameLength) }    ${ user.stash.toString().padEnd(stashLength) }    ${ winrate }    ${ user.wins }\n`;
+			const line = `${ i + 1 } ${ user.username.padEnd(usernameLength) }    ${ user.stash.toString().padEnd(stashLength) }    ${ winrate }    ${ user.wins }\n`;
 			table += line;
 		}
-		
+
 		const embed = new MessageEmbed()
 			.setColor('#10b981')
 			.setTitle('Leaderboard')

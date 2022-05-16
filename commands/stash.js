@@ -12,7 +12,7 @@ module.exports = {
 
 	async execute(interaction) {
 		const user = interaction.user;
-		let results = await Users.findOne({ where: { username: user.tag } });
+		let results = await Users.findOne({ where: { user_id: user.id } });
 		if (!results) {
 			try {
 				results = await Users.create({

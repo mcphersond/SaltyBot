@@ -66,7 +66,7 @@ module.exports = {
 			return await interaction.reply({ content: 'A bet already exists with this name. Please try again.', ephemeral: true });
 		}
 
-		
+
 		try {
 			// Store the bet and associated choices in the database.
 			const newBet = await Bets.create({
@@ -75,7 +75,7 @@ module.exports = {
 			});
 			logger.info(`Created Bet: ${JSON.stringify(newBet)}`);
 
-			var newChoices = [];
+			const newChoices = [];
 			for (let i = 0; i < choices.length; i++) {
 				const newChoice = await Choices.create({
 					bet_id: newBet.bet_id,
@@ -93,14 +93,14 @@ module.exports = {
 				.setDescription(`Place a bet by typing \`/bet ${newBet.name} $choice $amount\`, or by selecting an option below.\n\`\`\`${ formatTable(choices) }\`\`\``);
 
 			// Add some buttons for quick interactions.
-			let choiceButtons = [];
-			for(let i = 0; i < newChoices.length; i++) {
-				let choice = newChoices[i];
+			const choiceButtons = [];
+			for (let i = 0; i < newChoices.length; i++) {
+				const choice = newChoices[i];
 				choiceButtons.push(
 					new MessageButton()
 						.setCustomId(`betWager_${newBet.bet_id}_${choice.choice_id}`)
 						.setLabel(choice.name)
-						.setStyle('SECONDARY')
+						.setStyle('SECONDARY'),
 				);
 			}
 			const row = new MessageActionRow()
@@ -113,7 +113,7 @@ module.exports = {
 					new MessageButton()
 						.setCustomId(`betCancel_${newBet.bet_id}`)
 						.setLabel('❌ Cancel')
-						.setStyle('SECONDARY')
+						.setStyle('SECONDARY'),
 				);
 
 			// Send the response.
@@ -130,7 +130,8 @@ module.exports = {
 				},
 			);
 			logger.verbose(`Updated Bet: ${JSON.stringify(newBet)}`);
-		} catch (err) {
+		}
+		catch (err) {
 			logger.error(err);
 			await interaction.reply('Something got fucky wucky, please try again');
 			return;
