@@ -3,21 +3,21 @@ const { MessageEmbed } = require('discord.js');
 const BetController = require('../../controllers/BetController');
 
 module.exports = {
-  data: {
-    name: 'betCancel'
-  },
+	data: {
+		name: 'betCancel',
+	},
 
-  async execute(interaction, client) {
-    // Decode inputs based on the button's customId.
-    var customIdComponents = interaction.customId.split('_');
-    var bet_id = customIdComponents[1];
+	async execute(interaction, client) {
+		// Decode inputs based on the button's customId.
+		const customIdComponents = interaction.customId.split('_');
+		const bet_id = customIdComponents[1];
 
-    // Validate the user. Only the original book can cancel a bet.
-    var originalUser = interaction.message.interaction.user;
-    var user = interaction.user;
-    if (originalUser.id != user.id) {
-      return interaction.reply({ content: `Only ${originalUser.username} can perform this action. Sorry!`, ephemeral: true });
-    }
+		// Validate the user. Only the original book can cancel a bet.
+		const originalUser = interaction.message.interaction.user;
+		const user = interaction.user;
+		if (originalUser.id != user.id) {
+			return interaction.reply({ content: `Only ${originalUser.username} can perform this action. Sorry!`, ephemeral: true });
+		}
 
     // Update the original comment to reflect its cancelled status.
     const bet = await Bets.findOne({ where: { bet_id: bet_id } });

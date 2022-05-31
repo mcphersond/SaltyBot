@@ -43,20 +43,21 @@ client.on('interactionCreate', async interaction => {
 			await command.execute(interaction, client);
 		}
 		catch (error) {
-			console.error(error);
+			logger.error(error);
 			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 		}
 	}
 
 	if (interaction.isButton()) {
-		let action = interaction.customId.split('_')[0];
+		const action = interaction.customId.split('_')[0];
 		const button = client.buttons.get(action);
 		if (!button) return;
 
 		try {
 			await button.execute(interaction, client);
-		} catch (error) {
-			console.error(error);
+		}
+		catch (error) {
+			logger.error(error);
 			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 		}
 	}

@@ -17,15 +17,15 @@ Gambling bot
     {
         "token": "A Discord Authentication Token",
         "perms": "277025467456",
-        "ownerId": "",
-        "stageGuildId": "",
-        "prodGuildId": "",
-        "cliendId" : "",
-        "applicationId" : "",
-        "dbUser" : "",
-        "dbPass" : "",
+        "devId": "[DeveloperUserIds]",
+        "stageGuildId": "Staging Guild ID",
+        "prodGuildId": "Production Guild ID",
+        "cliendId" : "A Discord Bot Application ID",
+        "applicationId" : "A Discord Bot Application ID",
+        "dbUser" : "SQLLite Username",
+        "dbPass" : "SQLLite Password",
         "icon" : "https://i.pinimg.com/564x/50/32/23/5032232e13aca7bad5f03535b606366c.jpg",
-        "footer" : "SaltyBot v1.0"
+        "footer" : "SaltyBot v0.1.1"
       }
     ```
 

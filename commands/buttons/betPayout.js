@@ -3,15 +3,15 @@ const { Bets, Choices } = require('../../db_objects.js');
 const BetController = require('../../controllers/BetController');
 
 module.exports = {
-  data: {
-    name: 'betPayout'
-  },
+	data: {
+		name: 'betPayout',
+	},
 
-  async execute(interaction, client) {
-    // Decode inputs based on the button's customId.
-    var customIdComponents = interaction.customId.split('_');
-    var bet_id = customIdComponents[1];
-    var choice_id = customIdComponents[2];
+	async execute(interaction, client) {
+		// Decode inputs based on the button's customId.
+		const customIdComponents = interaction.customId.split('_');
+		const bet_id = customIdComponents[1];
+		const choice_id = customIdComponents[2];
 
     // Validate the user. Only the original book can pay out a bet.
     var originalUser = interaction.message.interaction.user;
@@ -40,6 +40,6 @@ module.exports = {
       .setDescription(`🎉 This bet is complete.\n\nAnyone who bet on **${ winningChoice.name }** has been paid out!`);
     interaction.message.edit({ embeds: [embed], components: [] });
 
-    interaction.deferUpdate();
-  }
-}
+		interaction.deferUpdate();
+	},
+};

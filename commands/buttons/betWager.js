@@ -1,21 +1,22 @@
 const { Wagers, Bets, Choices } = require('../../db_objects.js');
 const { MessageEmbed } = require('discord.js');
 const utils = require('../../utils.js');
+
 const UserController = require('../../controllers/UserController');
 const WagerController = require('../../controllers/WagerController');
 const { logger } = require('../../logger.js');
 
 module.exports = {
-  data: {
-    name: 'betWager'
-  },
+	data: {
+		name: 'betWager',
+	},
 
-  async execute(interaction, client) {
-    // Decode inputs based on the button's customId.
-    var customIdComponents = interaction.customId.split('_');
-    var bet_id = customIdComponents[1];
-    var choice_id = customIdComponents[2];
-
+	async execute(interaction, client) {
+		// Decode inputs based on the button's customId.
+		const customIdComponents = interaction.customId.split('_');
+		const bet_id = customIdComponents[1];
+		const choice_id = customIdComponents[2];
+		
 		try {
 			// Look up everything you'll need for this Wager.
 			var { existing, user } = await UserController.findOrCreateUser(interaction.user);

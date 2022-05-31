@@ -93,7 +93,7 @@ module.exports = {
 					new MessageButton()
 						.setCustomId(`betWager_${bet.bet_id}_${choice.choice_id}`)
 						.setLabel(choice.name)
-						.setStyle('SECONDARY')
+						.setStyle('SECONDARY'),
 				);
 			}
 			buttons.push(
