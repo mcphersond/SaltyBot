@@ -1,7 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { Users } = require('../db_objects.js');
-const { logger } = require('../logger.js');
-
+const UserController = require('../controllers/UserController.js');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('register')

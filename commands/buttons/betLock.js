@@ -1,7 +1,7 @@
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const { Bets, Choices } = require('../../db_objects.js');
 const utils = require('../../utils.js');
-const { logger } = require('../../logger.js');
+const BetController = require('../../controllers/BetController');
 
 module.exports = {
   data: {
@@ -26,42 +26,37 @@ module.exports = {
     const bet = await Bets.findOne({ where: { bet_id: bet_id } });
     const choices = await Choices.findAll({ where: { bet_id: bet_id } });
     
-    let choiceButtons = [];
+
+    let buttons = new utils.ButtonList();
     for(let i = 0; i < choices.length; i++) {
       let choice = choices[i];
-      choiceButtons.push(
+      buttons.push(
         new MessageButton()
           .setCustomId(`betPayout_${bet.bet_id}_${choice.choice_id}`)
           .setLabel(choice.name)
-          .setStyle('SECONDARY')
+          .setStyle('PRIMARY')
       );
     }
-    const row = new MessageActionRow()
-      .addComponents(
-        ...choiceButtons,
-        new MessageButton()
-          .setCustomId(`betCancel_${bet.bet_id}`)
-          .setLabel('❌ Cancel')
-          .setStyle('SECONDARY')
-      );
+    buttons.push(
+      new MessageButton()
+        .setCustomId(`betCancel_${bet.bet_id}`)
+        .setLabel('❌ Cancel')
+        .setStyle('SECONDARY')
+    );
+    const rows = buttons.getComponentList();
 
     const content = await utils.buildDetailedChoices(bet_id);
     const embed = new MessageEmbed()
       .setColor('#10b981')
       .setTitle(bet.name)
-      .setDescription(`🔒 Bets are locked! Good luck everyone!\n${originalUser.username} can pay winners with \`/payout ${bet.name} $choice\`, or with the buttons below.\n\`\`\`${ utils.formatTable(content) }\`\`\``);
-    interaction.message.edit({ embeds: [embed], components: [row] });
+      .setDescription(`🔒 Bets are locked! Good luck everyone!\n\n${originalUser.username} can pay winners with \`/payout ${bet.name} $choice\`, or with the buttons below.\n\`\`\`${ utils.formatBettingTable(content) }\`\`\``);
+    interaction.message.edit({ embeds: [embed], components: rows });
 
     // Update the the associated bet.
     try {
-      await Bets.update(
-        { is_open: false },
-        { where: { bet_id: bet_id } }
-      );
-      logger.info(`Locked Bet: ${bet_id}`);
-    }
-    catch (err) {
-      logger.error('Could not Lock Bet: ', err);
+      await BetController.lockBet(bet_id);
+    } catch(err) {
+      return interaction.reply({ content: `An error occurred, sorry!`, ephemeral: true });
     }
 
     interaction.deferUpdate();

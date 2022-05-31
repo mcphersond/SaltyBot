@@ -1,17 +1,18 @@
 const { Choices, Wagers } = require('./db_objects.js');
 const { logger } = require('./logger.js');
+const { MessageActionRow } = require('discord.js');
 
 module.exports = {
 
-	formatTable(choices) {
+	formatBettingTable(choices) {
 		const numberIcons = ['0️', '1️', '2️', '3️', '4️', '5️', '6️', '7️', '8️', '9️'];
 		const optionLength = Math.max('Choice'.length, ...(choices.map(opt => opt.name.length)));
-		const totalLength = Math.max('Odds'.length, ...(choices.map(opt => opt.total.toString().length)));
+		const totalLength = Math.max('Odds'.length, ...(choices.map(opt => opt.total ? opt.total.toString().length : '100'.length)));
 		let output = '# ' + 'Choice'.padEnd(optionLength) + '      ' + 'Pool'.padEnd(totalLength) + '      Odds\n';
 
 		for (let i = 0; i < choices.length; i++) {
 			const paddedOpt = choices[i].name.padEnd(optionLength);
-			if (choices[i].total == 0) {
+			if (typeof choices[i].total === 'undefined' || choices[i].total == 0) {
 				choices[i].total = 100;
 				choices[i].odds = 1;
 			}
@@ -89,4 +90,28 @@ module.exports = {
 
 		return detailedChoices;
 	},
+
+	ButtonList: class {
+		constructor() {
+			this.arr = [[]];
+		}
+
+		push(messageButton) {
+			if (this.arr[this.arr.length - 1].length < 5) {
+				this.arr[this.arr.length - 1].push(messageButton);
+			} else if (this.arr.length < 5) {
+				this.arr.push([messageButton]);
+			} else {
+				throw new Error('Too many buttons! Discord can only handle 5 rows of 5 buttons each.');
+			}
+		}
+
+		getComponentList() {
+			var rows = [];
+			for (let i = 0; i < this.arr.length; i++) {
+				rows.push(new MessageActionRow().addComponents(this.arr[i]));
+			}
+			return rows;
+		}
+	}
 };

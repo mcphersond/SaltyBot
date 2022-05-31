@@ -1,6 +1,7 @@
-const { Users, Choices, Bets, Wagers } = require('../../db_objects.js');
+const { Bets } = require('../../db_objects.js');
 const { MessageEmbed } = require('discord.js');
-const { logger } = require('../../logger.js');
+const BetController = require('../../controllers/BetController');
+
 module.exports = {
   data: {
     name: 'betCancel'
@@ -25,32 +26,14 @@ module.exports = {
       .setTitle(bet.name)
       .setDescription(`❌ This bet has been cancelled. Everyone has been refunded.`);
     interaction.message.edit({ embeds: [embed], components: [] });
-    
+
+    // Cancel the bet.
     try {
-      // Destroy the associated bet, choices, and wagers.
-      await Bets.destroy({ where: { bet_id: bet_id } });
-      await Choices.destroy({ where: { bet_id: bet_id } });
-      logger.info(`Destroyed Bet ${bet_id} and all associated choices.`);
-
-      // Pay back any wagers on this bet, then destroy their records.
-      const wagers = await Wagers.findAll({ where: { bet_id: bet_id } });
-      for (let i = 0; i < wagers.length; i++) {
-        const user = await Users.findOne({ where: { user_id: wagers[i].user_id } });
-        var amount = wagers[i].amount;
-        user.stash = user.stash + amount;
-        await Users.update(
-          { stash: user.stash },
-          { where: { user_id: user.user_id } }
-        );
-        logger.info(`Refunded Wager: ${ amount } --> ${ user.username }`);
-      }
-      await Wagers.destroy({ where: { bet_id: bet_id } });
-      logger.info(`Refunded and Destroyed Wagers associated Bet ${bet_id}.`);
-    }
-    catch (err) {
-      logger.error('Could not cancel Bet:', err);
+      await BetController.cancelBet(bet_id);
+    } catch(err) {
+      return interaction.reply({ content: `An error occurred, sorry!`, ephemeral: true });
     }
 
-    interaction.deferUpdate();
+    return interaction.deferUpdate();
   }
 }

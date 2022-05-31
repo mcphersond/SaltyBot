@@ -10,7 +10,7 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('bet')
-				.setDescription('Set your default bet amount.')
+				.setDescription('Set a default amount to wager. You can still specify an amount when using /bet.')
 				.addIntegerOption(option =>
 					option.setName('amount')
 						.setDescription('How much salt do you want to bet by default?')
@@ -54,11 +54,11 @@ module.exports = {
 				}
 			}
 
-			// Set the user's defaultWager.
+			// Set the user's default Wager.
 			try {
 				await Users.update(
 					{
-						defaultWager: amount,
+						default_wager: amount,
 					},
 					{
 						where: { user_id: user.id },

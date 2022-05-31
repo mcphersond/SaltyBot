@@ -13,6 +13,7 @@ require('./models/Users.js')(db, Sequelize.DataTypes);
 require('./models/Bets.js')(db, Sequelize.DataTypes);
 require('./models/Choices.js')(db, Sequelize.DataTypes);
 require('./models/Wagers.js')(db, Sequelize.DataTypes);
+require('./models/Guilds.js')(db, Sequelize.DataTypes);
 
 const force = process.argv.includes('--force') || process.argv.includes('-f');
 

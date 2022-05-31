@@ -1,8 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { Users } = require('../db_objects.js');
-const { icon } = require('../config.json');
-const { logger } = require('../logger.js');
+const UserController = require('../controllers/UserController.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -10,33 +8,22 @@ module.exports = {
 		.setDescription('View your current salt stash'),
 
 
-	async execute(interaction) {
-		const user = interaction.user;
-		let results = await Users.findOne({ where: { username: user.tag } });
-		if (!results) {
-			try {
-				results = await Users.create({
-					user_id: user.id,
-					username: user.tag,
-					stash: 2000,
-				});
-				logger.info(`Adding new user ${user.tag} to database: ${JSON.stringify(results)}`);
-			}
-			catch (err) {
-				logger.error(err);
-				await interaction.reply({ content: 'Something went wrong.', ephemeral: true });
-			}
-		}
-		let winrate = results.wins;
-		if (results.losses > 0) winrate = results.wins / results.losses;
+	async execute(interaction, client) {
+
+		
+		// Look up the user.
+		var { user } = await UserController.findOrCreateUser(interaction.user, interaction.member.guild.id);
+		
+		var displayName = await UserController.getDisplayName(user, client);
+
 		const embed = new MessageEmbed()
 			.setColor('#10b981')
-			.setTitle(`$${results.stash}`)
-			.setAuthor({ name: 'User ' + user.tag, iconURL: icon })
+			.setTitle(`$${user.stash}`)
+			.setAuthor({ name: displayName, iconURL: interaction.user.avatarURL() })
 			.addFields(
-				{ name: 'W/L Ratio', value: winrate.toFixed(2), inline: true },
-				{ name: 'Bets Placed', value: '' + (results.wins + results.losses), inline: true },
-				{ name: 'Default Wager', value: '$' + (results.defaultWager), inline: true },
+				{ name: 'W/L Ratio', value: user.wl_ratio.toFixed(2), inline: true },
+				{ name: 'Bets Placed', value: '' + user.bets_placed, inline: true },
+				{ name: 'Default Wager', value: '$' + user.default_wager, inline: true },
 			);
 		await interaction.reply({ embeds: [embed], ephemeral: true });
 	},

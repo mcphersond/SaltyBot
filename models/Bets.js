@@ -21,8 +21,15 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: true,
 			unique: true,
 		},
-		user_id: DataTypes.STRING,
+		guild_id: {
+			type: DataTypes.STRING,
+			allowNull: false
+		},
+		user_id: {
+			type: DataTypes.STRING,
+			allowNull: false
+		}
 	}, {
-		timestamps: false,
+		timestamps: true,
 	});
 };

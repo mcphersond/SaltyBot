@@ -3,11 +3,9 @@ const { Users, Bets, Wagers, Choices } = require('../db_objects.js');
 const { icon, footer } = require('../config.json');
 const { MessageEmbed } = require('discord.js');
 const utils = require('../utils.js');
-/*  TODO: Fix upsert, not gonna work
-    TODO: Add support for choice numbers
-    TODO: User modify their own bet
-    TODO: Replace if/else checks with returns
- */
+const UserController = require('../controllers/UserController');
+const WagerController = require('../controllers/WagerController');
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('bet')
@@ -28,29 +26,12 @@ module.exports = {
 
 	async execute(interaction) {
 		const { user } = interaction;
-		let state = 'created';
 		const name = interaction.options.getString('betname');
 		const selection = interaction.options.getString('choice');
 		var amount = interaction.options.getInteger('amount');
 
 		// Look up the user, or create a user if there isn't one.
-		let account = await Users.findOne({ where: { username: user.tag } });
-		if (!account) {
-			try {
-				account = await Users.create({
-					user_id: user.id,
-					username: user.tag,
-					stash: 2000,
-				});
-				console.log(`Adding new user to database: \n${JSON.stringify(account)}`);
-			}
-			catch (err) {
-				console.log(err);
-				await interaction.reply('Something went wrong.');
-			}
-		}
-
-		
+		let account = await UserController.findOrCreateUser(interaction.user);
 
 		// Validate the wager amount. If the user didn't provide one, use their built-in default.
 		// The user can't bet more than what's in their stash.
@@ -58,7 +39,7 @@ module.exports = {
 		let overdraftProtection = false;
 		let allIn = false;
 		let attemptedAmount = 0;
-		if (!amount) amount = account.defaultWager;
+		if (!amount) amount = account.default_wager;
 		if (amount <= 0) {
 			allIn = true;
 			attemptedAmount = amount;
@@ -125,7 +106,7 @@ module.exports = {
 				},
 			);
 			const content = await utils.buildDetailedChoices(bet.bet_id);
-			const table = '```' + utils.formatTable(content) + '```';
+			const table = '```' + utils.formatBettingTable(content) + '```';
 
 			const embed = new MessageEmbed()
 				.setColor('#10b981')
